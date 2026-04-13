@@ -24,11 +24,5 @@ for path in "${required_paths[@]}"; do
   fi
 done
 
-if [[ ! -d "$root/usr/lib/glibc-hwcaps/x86-64-v3" ]]; then
-  printf 'missing x86-64-v3 hwcaps directory\n' >&2
-  exit 1
-fi
-
 readelf -d "$root/usr/lib/libggml-cuda.so" | grep -Eq 'libcudart|libcublas'
 printf 'Asset smoke check passed for %s\n' "$asset"
-

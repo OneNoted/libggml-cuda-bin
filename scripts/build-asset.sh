@@ -12,12 +12,12 @@ trap 'rm -rf "$work_dir"' EXIT
 
 src_dir="$work_dir/ggml-$pkgver"
 base_stage="$work_dir/stage/base"
-v3_stage="$work_dir/stage/x86-64-v3"
 install_root="$work_dir/install-root"
 asset_name="${pkgname}-${pkgver}-${pkgrel}-x86_64.tar.zst"
 asset_path="${out_dir}/${asset_name}"
+build_x86_64_v3=${LIBGGML_BUILD_X86_64_V3:-false}
 
-mkdir -p "$out_dir" "$base_stage" "$v3_stage" "$install_root"
+mkdir -p "$out_dir" "$base_stage" "$install_root"
 
 # Arch's cuda package installs nvcc under /opt/cuda/bin but does not expose it
 # in non-login CI shells.
@@ -70,13 +70,18 @@ build_variant() {
 }
 
 build_variant "x86-64" "lib" "$base_stage"
-build_variant "x86-64-v3" "lib/glibc-hwcaps/x86-64-v3" "$v3_stage"
 
 cp -a "$base_stage/." "$install_root/"
 
-if [[ -d "$v3_stage/usr/lib/glibc-hwcaps" ]]; then
-  mkdir -p "$install_root/usr/lib/glibc-hwcaps"
-  cp -a "$v3_stage/usr/lib/glibc-hwcaps/." "$install_root/usr/lib/glibc-hwcaps/"
+if [[ "$build_x86_64_v3" == true ]]; then
+  v3_stage="$work_dir/stage/x86-64-v3"
+  mkdir -p "$v3_stage"
+  build_variant "x86-64-v3" "lib/glibc-hwcaps/x86-64-v3" "$v3_stage"
+
+  if [[ -d "$v3_stage/usr/lib/glibc-hwcaps" ]]; then
+    mkdir -p "$install_root/usr/lib/glibc-hwcaps"
+    cp -a "$v3_stage/usr/lib/glibc-hwcaps/." "$install_root/usr/lib/glibc-hwcaps/"
+  fi
 fi
 
 rm -rf "$install_root/usr/lib/glibc-hwcaps"/*/cmake

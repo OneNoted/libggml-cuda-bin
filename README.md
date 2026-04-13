@@ -14,7 +14,7 @@ for CUDA users and slow for downstream consumers like `whisper.cpp-cuda`.
 This repo packages a prebuilt install tree instead:
 
 - broad CUDA compatibility by building with `GGML_NATIVE=OFF`
-- base `x86-64` libraries plus `x86-64-v3` hwcaps libraries
+- baseline `x86-64` shared libraries for the published release path
 - shared OpenBLAS, Vulkan, and CUDA backends
 - AUR-friendly `-bin` layout backed by GitHub Releases
 
@@ -51,3 +51,9 @@ driver libraries, so the package depends on:
 - `vulkan-icd-loader`
 - `vulkan-driver`
 
+## Performance note
+
+The first release path intentionally builds only the baseline `x86-64` install
+tree so GitHub-hosted CI can finish in a practical amount of time. If you want
+to experiment with an additional `x86-64-v3` hwcaps tree locally, set
+`LIBGGML_BUILD_X86_64_V3=true` when running `scripts/build-asset.sh`.
