@@ -19,6 +19,14 @@ asset_path="${out_dir}/${asset_name}"
 
 mkdir -p "$out_dir" "$base_stage" "$v3_stage" "$install_root"
 
+# Arch's cuda package installs nvcc under /opt/cuda/bin but does not expose it
+# in non-login CI shells.
+if [[ -x /opt/cuda/bin/nvcc ]]; then
+  export PATH="/opt/cuda/bin:${PATH}"
+  : "${CUDAToolkit_ROOT:=/opt/cuda}"
+  export CUDAToolkit_ROOT
+fi
+
 curl -fsSL "${upstream_repo}/archive/refs/tags/v${pkgver}.tar.gz" | tar -xz -C "$work_dir"
 
 # Allow the build script to control the CPU baseline explicitly.
@@ -88,4 +96,3 @@ TZ=UTC LC_ALL=C tar \
 
 sha256sum "$asset_path" > "${asset_path}.sha256"
 printf 'Built %s\n' "$asset_path"
-
