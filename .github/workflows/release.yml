@@ -1,0 +1,63 @@
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      pkgver:
+        description: Upstream ggml version
+        required: true
+        default: '0.9.11'
+      pkgrel:
+        description: Arch package release
+        required: true
+        default: '1'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: archlinux:base-devel
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: >
+          pacman -Syu --noconfirm
+          cmake
+          curl
+          cuda
+          diffutils
+          git
+          ninja
+          nvidia-utils
+          openblas
+          shaderc
+          vulkan-icd-loader
+          vulkan-headers
+
+      - name: Build release asset
+        run: ./scripts/build-asset.sh "${{ inputs.pkgver }}" "${{ inputs.pkgrel }}"
+
+      - name: Smoke-test release asset
+        run: >
+          ./scripts/smoke-asset.sh
+          "dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst"
+
+      - name: Refresh AUR metadata
+        run: >
+          ./scripts/update-aur-metadata.sh
+          "${{ inputs.pkgver }}"
+          "${{ inputs.pkgrel }}"
+          "dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst"
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ inputs.pkgver }}-${{ inputs.pkgrel }}
+          files: |
+            dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst
+            dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst.sha256
+            PKGBUILD
+            .SRCINFO
