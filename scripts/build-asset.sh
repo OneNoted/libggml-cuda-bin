@@ -16,7 +16,7 @@ install_root="$work_dir/install-root"
 asset_name="${pkgname}-${pkgver}-${pkgrel}-x86_64.tar.zst"
 asset_path="${out_dir}/${asset_name}"
 build_x86_64_v3=${LIBGGML_BUILD_X86_64_V3:-false}
-cuda_architectures=${LIBGGML_CUDA_ARCHITECTURES:-75-real;80-real;86-real;89-real}
+cuda_architectures=${LIBGGML_CUDA_ARCHITECTURES:-75-real;80-real;86-real;89-real;120a-real}
 
 mkdir -p "$out_dir" "$base_stage" "$install_root"
 

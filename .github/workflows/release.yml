@@ -1,16 +1,27 @@
 name: release
 
 on:
+  schedule:
+    - cron: '17 */6 * * *'
   workflow_dispatch:
     inputs:
-      pkgver:
-        description: Upstream ggml version
-        required: true
-        default: '0.9.11'
-      pkgrel:
-        description: Arch package release
-        required: true
-        default: '1'
+      force_release:
+        description: Force a rebuild even if upstream has not changed
+        required: false
+        default: false
+        type: boolean
+      upstream_version:
+        description: Override the upstream ggml version to package
+        required: false
+        type: string
+      pkgrel_override:
+        description: Override the Arch pkgrel for the release
+        required: false
+        type: string
+
+concurrency:
+  group: libggml-cuda-bin-release
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -21,6 +32,9 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - name: Install build dependencies
         run: >
@@ -29,35 +43,86 @@ jobs:
           curl
           cuda
           diffutils
+          jq
           git
           ninja
           nvidia-utils
+          openssh
           openblas
           shaderc
           vulkan-icd-loader
           vulkan-headers
 
+      - name: Detect desired release
+        id: plan
+        env:
+          FORCE_RELEASE: ${{ github.event_name == 'workflow_dispatch' && inputs.force_release || 'false' }}
+          PKGREL_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.pkgrel_override || '' }}
+          UPSTREAM_VERSION_OVERRIDE: ${{ github.event_name == 'workflow_dispatch' && inputs.upstream_version || '' }}
+        run: ./scripts/detect-release.sh >> "$GITHUB_OUTPUT"
+
+      - name: Explain release decision
+        run: |
+          printf 'should_release=%s\n' '${{ steps.plan.outputs.should_release }}'
+          printf 'pkgver=%s\n' '${{ steps.plan.outputs.pkgver }}'
+          printf 'pkgrel=%s\n' '${{ steps.plan.outputs.pkgrel }}'
+          printf 'reason=%s\n' '${{ steps.plan.outputs.reason }}'
+
       - name: Build release asset
-        run: ./scripts/build-asset.sh "${{ inputs.pkgver }}" "${{ inputs.pkgrel }}"
+        if: steps.plan.outputs.should_release == 'true'
+        run: ./scripts/build-asset.sh "${{ steps.plan.outputs.pkgver }}" "${{ steps.plan.outputs.pkgrel }}"
 
       - name: Smoke-test release asset
+        if: steps.plan.outputs.should_release == 'true'
         run: >
           ./scripts/smoke-asset.sh
-          "dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst"
+          "dist/${{ steps.plan.outputs.asset_name }}"
 
       - name: Refresh AUR metadata
+        if: steps.plan.outputs.should_release == 'true'
         run: >
           ./scripts/update-aur-metadata.sh
-          "${{ inputs.pkgver }}"
-          "${{ inputs.pkgrel }}"
-          "dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst"
+          "${{ steps.plan.outputs.pkgver }}"
+          "${{ steps.plan.outputs.pkgrel }}"
+          "dist/${{ steps.plan.outputs.asset_name }}"
+
+      - name: Commit release metadata
+        if: steps.plan.outputs.should_release == 'true'
+        id: commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add PKGBUILD .SRCINFO
+          git commit -m "chore: release libggml-cuda-bin ${{ steps.plan.outputs.pkgver }}-${{ steps.plan.outputs.pkgrel }}"
+          git push origin HEAD:main
+          printf 'commit_sha=%s\n' "$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Publish GitHub Release
+        if: steps.plan.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ inputs.pkgver }}-${{ inputs.pkgrel }}
+          tag_name: ${{ steps.plan.outputs.release_tag }}
+          target_commitish: ${{ steps.commit.outputs.commit_sha }}
           files: |
-            dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst
-            dist/libggml-cuda-bin-${{ inputs.pkgver }}-${{ inputs.pkgrel }}-x86_64.tar.zst.sha256
+            dist/${{ steps.plan.outputs.asset_name }}
+            dist/${{ steps.plan.outputs.asset_name }}.sha256
             PKGBUILD
             .SRCINFO
+
+      - name: Load AUR SSH key
+        if: steps.plan.outputs.should_release == 'true'
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+      - name: Trust AUR host key
+        if: steps.plan.outputs.should_release == 'true'
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+
+      - name: Publish AUR metadata
+        if: steps.plan.outputs.should_release == 'true'
+        env:
+          AUR_REMOTE: ssh://aur@aur.archlinux.org/libggml-cuda-bin.git
+        run: ./scripts/publish-aur.sh "$AUR_REMOTE"
