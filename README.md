@@ -59,7 +59,7 @@ to experiment with an additional `x86-64-v3` hwcaps tree locally, set
 `LIBGGML_BUILD_X86_64_V3=true` when running `scripts/build-asset.sh`.
 
 The published CI path also pins CUDA code generation to
-`61-real;70-real;75-real;80-real;86-real;89-real` by default. That keeps the
-first release path focused on Pascal-through-Ada cards and avoids the much more
-expensive CUDA 13 default architecture set. You can override that locally with
+`75-real;80-real;86-real;89-real` by default. That keeps the first release
+path focused on Turing-through-Ada cards and avoids the much more expensive
+CUDA 13 default architecture set. You can override that locally with
 `LIBGGML_CUDA_ARCHITECTURES=...`.
