@@ -29,6 +29,7 @@ jobs:
     timeout-minutes: 180
     container:
       image: archlinux:base-devel
+      options: --network host
     permissions:
       contents: write
     steps:
