@@ -9,7 +9,8 @@ on:
 
 jobs:
   metadata:
-    runs-on: ubuntu-latest
+    runs-on: apollo-libggml-cuda-bin
+    timeout-minutes: 20
     container:
       image: archlinux:base-devel
     steps:
@@ -20,4 +21,3 @@ jobs:
 
       - name: Validate packaging metadata
         run: ./scripts/validate-repo.sh
-
