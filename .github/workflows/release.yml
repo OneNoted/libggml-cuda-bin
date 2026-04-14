@@ -27,9 +27,6 @@ jobs:
   build:
     runs-on: apollo-libggml-cuda-bin
     timeout-minutes: 180
-    container:
-      image: archlinux:base-devel
-      options: --network host
     permissions:
       contents: write
     steps:
@@ -37,23 +34,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-
-      - name: Install build dependencies
-        run: >
-          pacman -Syu --noconfirm
-          cmake
-          curl
-          cuda
-          diffutils
-          jq
-          git
-          ninja
-          nvidia-utils
-          openssh
-          openblas
-          shaderc
-          vulkan-icd-loader
-          vulkan-headers
 
       - name: Detect desired release
         id: plan
@@ -72,21 +52,29 @@ jobs:
 
       - name: Build release asset
         if: steps.plan.outputs.should_release == 'true'
-        run: ./scripts/build-asset.sh "${{ steps.plan.outputs.pkgver }}" "${{ steps.plan.outputs.pkgrel }}"
-
-      - name: Smoke-test release asset
-        if: steps.plan.outputs.should_release == 'true'
-        run: >
-          ./scripts/smoke-asset.sh
-          "dist/${{ steps.plan.outputs.asset_name }}"
-
-      - name: Refresh AUR metadata
-        if: steps.plan.outputs.should_release == 'true'
-        run: >
-          ./scripts/update-aur-metadata.sh
-          "${{ steps.plan.outputs.pkgver }}"
-          "${{ steps.plan.outputs.pkgrel }}"
-          "dist/${{ steps.plan.outputs.asset_name }}"
+        run: |
+          ./scripts/run-in-arch-container.sh '
+            pacman -Syu --noconfirm \
+              cmake \
+              curl \
+              cuda \
+              diffutils \
+              jq \
+              git \
+              ninja \
+              nvidia-utils \
+              openssh \
+              openblas \
+              shaderc \
+              vulkan-icd-loader \
+              vulkan-headers
+            ./scripts/build-asset.sh "${{ steps.plan.outputs.pkgver }}" "${{ steps.plan.outputs.pkgrel }}"
+            ./scripts/smoke-asset.sh "dist/${{ steps.plan.outputs.asset_name }}"
+            ./scripts/update-aur-metadata.sh \
+              "${{ steps.plan.outputs.pkgver }}" \
+              "${{ steps.plan.outputs.pkgrel }}" \
+              "dist/${{ steps.plan.outputs.asset_name }}"
+          '
 
       - name: Commit release metadata
         if: steps.plan.outputs.should_release == 'true'
