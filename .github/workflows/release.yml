@@ -66,6 +66,7 @@ jobs:
               openssh \
               openblas \
               shaderc \
+              spirv-headers \
               vulkan-icd-loader \
               vulkan-headers
             ./scripts/build-asset.sh "${{ steps.plan.outputs.pkgver }}" "${{ steps.plan.outputs.pkgrel }}"
