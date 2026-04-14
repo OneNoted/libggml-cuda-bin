@@ -27,5 +27,3 @@ same workflow.
 ## Maintainer
 
 Jonatan Jonasson `<notes@madeingotland.com>`
-
-GitHub AUR publishing requires an `AUR_SSH_PRIVATE_KEY` repository secret.
