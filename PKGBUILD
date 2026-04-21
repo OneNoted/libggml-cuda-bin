@@ -3,7 +3,7 @@
 pkgname=libggml-cuda-bin
 _upstream_pkgname=ggml
 pkgver=0.10.0
-pkgrel=1
+pkgrel=2
 pkgdesc="Tensor library for machine learning with OpenBLAS, Vulkan, and CUDA"
 arch=('x86_64')
 url="https://github.com/OneNoted/libggml-cuda-bin"
@@ -16,6 +16,9 @@ depends=(
   'vulkan-icd-loader'
 )
 provides=(
+  "${pkgname}=${pkgver}-${pkgrel}"
+  "${pkgname}=0.10.0-1"
+  "${pkgname}=0.9.11-2"
   "libggml=${pkgver}"
   "libggml-cuda-git=${pkgver}"
 )
