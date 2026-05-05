@@ -29,6 +29,8 @@ jobs:
     timeout-minutes: 180
     permissions:
       contents: write
+    env:
+      ARCH_SNAPSHOT_DATE: 2026/05/02
     steps:
       - uses: actions/checkout@v4
         with:
@@ -54,7 +56,7 @@ jobs:
         if: steps.plan.outputs.should_release == 'true'
         run: |
           ./scripts/run-in-arch-container.sh '
-            pacman -Syu --noconfirm \
+            pacman -Syyuu --noconfirm \
               cmake \
               curl \
               cuda \

@@ -10,6 +10,9 @@ same workflow.
 
 - `validate.yml` checks packaging metadata
 - `release.yml` tracks upstream `ggml` releases
+- CI runs Arch package installs against the pinned `ARCH_SNAPSHOT_DATE` mirror
+  so scheduled releases do not silently pick up an incompatible CUDA host
+  compiler from rolling repos
 - when a release is needed, it builds and smoke-tests
   `libggml-cuda-bin-<pkgver>-<pkgrel>-x86_64.tar.zst`
 - the workflow updates `PKGBUILD` and `.SRCINFO`, commits them to `main`,

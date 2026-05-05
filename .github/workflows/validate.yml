@@ -11,11 +11,13 @@ jobs:
   metadata:
     runs-on: apollo-libggml-cuda-bin
     timeout-minutes: 20
+    env:
+      ARCH_SNAPSHOT_DATE: 2026/05/02
     steps:
       - uses: actions/checkout@v4
 
       - name: Validate packaging metadata
         run: >
           ./scripts/run-in-arch-container.sh
-          'pacman -Syu --noconfirm diffutils &&
+          'pacman -Syyuu --noconfirm diffutils &&
           ./scripts/validate-repo.sh'
