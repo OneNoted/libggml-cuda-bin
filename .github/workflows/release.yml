@@ -31,6 +31,7 @@ jobs:
       contents: write
     env:
       ARCH_SNAPSHOT_DATE: 2026/05/02
+      CMAKE_BUILD_PARALLEL_LEVEL: 2
     steps:
       - uses: actions/checkout@v4
         with:

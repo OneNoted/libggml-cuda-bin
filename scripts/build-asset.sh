@@ -17,8 +17,15 @@ asset_name="${pkgname}-${pkgver}-${pkgrel}-x86_64.tar.zst"
 asset_path="${out_dir}/${asset_name}"
 build_x86_64_v3=${LIBGGML_BUILD_X86_64_V3:-false}
 cuda_architectures=${LIBGGML_CUDA_ARCHITECTURES:-75-real;80-real;86-real;89-real;120a-real}
+build_jobs=${CMAKE_BUILD_PARALLEL_LEVEL:-2}
+
+if [[ ! $build_jobs =~ ^[1-9][0-9]*$ ]]; then
+  printf 'CMAKE_BUILD_PARALLEL_LEVEL must be a positive integer, got: %s\n' "$build_jobs" >&2
+  exit 1
+fi
 
 mkdir -p "$out_dir" "$base_stage" "$install_root"
+printf 'Building with CMAKE_BUILD_PARALLEL_LEVEL=%s\n' "$build_jobs"
 
 # Arch's cuda package installs nvcc under /opt/cuda/bin but does not expose it
 # in non-login CI shells.
@@ -69,7 +76,7 @@ build_variant() {
   CXXFLAGS="${base_cxxflags} -march=${arch} -O3" \
     cmake -B "$build_dir" "${cmake_common[@]}" -DCMAKE_INSTALL_LIBDIR="$libdir"
 
-  cmake --build "$build_dir"
+  cmake --build "$build_dir" --parallel "$build_jobs"
   DESTDIR="$dest_dir" cmake --install "$build_dir"
 }
 
