@@ -12,6 +12,7 @@ depends=(
   'cuda'
   'nvidia-utils'
   'openblas'
+  'spirv-headers'
   'vulkan-driver'
   'vulkan-icd-loader'
 )

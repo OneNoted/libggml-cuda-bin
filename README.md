@@ -22,8 +22,8 @@ same workflow.
 
 - target: `x86_64`
 - backends: CUDA, OpenBLAS, Vulkan
-- runtime deps: `cuda`, `nvidia-utils`, `openblas`, `vulkan-icd-loader`,
-  `vulkan-driver`
+- runtime deps: `cuda`, `nvidia-utils`, `openblas`, `spirv-headers`,
+  `vulkan-icd-loader`, `vulkan-driver`
 - default CUDA archs:
   `75-real;80-real;86-real;89-real;120a-real`
 

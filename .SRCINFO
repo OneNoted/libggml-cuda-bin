@@ -8,6 +8,7 @@ pkgbase = libggml-cuda-bin
 	depends = cuda
 	depends = nvidia-utils
 	depends = openblas
+	depends = spirv-headers
 	depends = vulkan-driver
 	depends = vulkan-icd-loader
 	provides = libggml-cuda-bin=0.13.1-1
