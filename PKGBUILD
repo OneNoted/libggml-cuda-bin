@@ -2,7 +2,7 @@
 
 pkgname=libggml-cuda-bin
 _upstream_pkgname=ggml
-pkgver=0.18.1
+pkgver=0.19.0
 pkgrel=1
 pkgdesc="Tensor library for machine learning with OpenBLAS, Vulkan, and CUDA"
 arch=('x86_64')
@@ -34,7 +34,7 @@ _asset_name="${pkgname}-${pkgver}-${_asset_pkgrel}-x86_64.tar.zst"
 source=(
   "${_asset_name}::${url}/releases/download/v${pkgver}-${_asset_pkgrel}/${_asset_name}"
 )
-sha256sums=('2b839d83263567eda57c1f9513273c2695e409deb02c8cab1b15819a893f2de3')
+sha256sums=('3c9d2976bfdcab183461e78b6501663e2e6faff503846f077a14acc49ccb759e')
 
 package() {
   bsdtar -xf "${srcdir}/${_asset_name}" -C "${pkgdir}"
